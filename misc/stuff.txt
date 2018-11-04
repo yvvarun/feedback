@@ -1,0 +1,30 @@
+1. User clicks login in their browser. Our server makes a get request to
+/auth/google (an address specified in the Google developer console).
+2. Passport forwards the request to Google using the client ID and client secret
+we set up to register our app.
+3. Google will then ask the user if they grant permission to our app to access
+their profile. If they grant permission, Google will send a response back to the
+server at /auth/google/callback  (a URI specified in the Google developer console
+and which matches the redirect route in the passport set up).
+The URI will also contain a code.
+4. Passport again handles this route, pulling the code out of the URI and
+sending a request back to Google with the same code.
+5. Google then responds with details about this user.
+6. At this point, the callback in the Google strategy set up fires,
+giving us the user’s profile data.
+7. We check if there is a user in the database with the Google ID we have
+just got back. If there is none, we create a new user using that Google ID.
+We call done to inform passport that we can resume authenticating.
+8. Passport calls serializeUser , which takes the user just authenticated and
+determines that we want to store the MongoDB ID to identify the user in the session.
+This is passed to cookie session which encodes the ID and sends it to the browser
+in the response header.
+9. Whenever the user makes a follow-up request, the browser sends the cookie
+back with the same encoded token.
+Cookie session extracts and decodes the cookie data, assigning it to the session
+property on the request object. The request flows down to passport, which looks
+up req.session  and takes the MongoDB ID out and uses it in the deserializeUser
+function. The user is found in the database using this ID.
+Passport then attaches this user to the request object as req.user .
+10. Passport also attaches a logout function to the request object which expires
+the cookie whenever the user accesses the logout route.
