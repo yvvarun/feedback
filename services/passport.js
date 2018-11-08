@@ -38,21 +38,19 @@ passport.use(
       callbackURL: "/auth/google/callback",
       proxy: true
     },
-    (accessToken, refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       //check if user exists already in the database.
-      User.findOne({ googleId: profile.id }).then(existingUser => {
-        if (existingUser) {
-          //already exists. don't add to the db.
-          //also, passport middleware calls serializeUser with the 2nd argument.
-          done(null, existingUser);
-        } else {
-          //creating a new instance of User. using save method to add to the database.
-          //also, passport middleware calls serializeUser with the 2nd argument.
-          new User({ googleId: profile.id }).save().then(user => {
-            done(null, user);
-          });
-        }
-      });
+      existingUser = await User.findOne({ googleId: profile.id });
+      if (existingUser) {
+        //already exists. don't add to the db.
+        //also, passport middleware calls serializeUser with the 2nd argument.
+        done(null, existingUser);
+      } else {
+        //creating a new instance of User. using save method to add to the database.
+        //also, passport middleware calls serializeUser with the 2nd argument.
+        user = await new User({ googleId: profile.id }).save();
+        done(null, user);
+      }
     }
   )
 );
